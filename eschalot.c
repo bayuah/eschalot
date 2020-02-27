@@ -122,7 +122,7 @@ static void		(*msg)(char *, ...);
 /* User IO functions */
 static void		setoptions(int, char *[]);
 static void		readfile(void);
-static void		printresult(RSA *, uint8_t *, uint8_t *);
+static void		printresult(RSA *, uint8_t *, uint8_t *, uint64_t *);
 /* Math and search functions */
 static _Bool		fsearch(uint8_t *, uint8_t *);
 static _Bool		psearch(uint8_t *, uint8_t *);
@@ -364,8 +364,9 @@ worker(void *arg)
 					msg("Generating new RSA key.\n\n");
 					break;
 				} else {
+
 					pthread_mutex_lock(&printresult_lock);
-					printresult(rsa, onion, onionfinal);
+					printresult(rsa, onion, onionfinal, counter);
 				
 					pthread_mutex_unlock(&printresult_lock);
 				}
@@ -606,7 +607,7 @@ base32_dec (uint8_t *dst, uint8_t *src)
 
 /* Print found .onion name and PEM formatted RSA key. */
 void 
-printresult(RSA *rsa, uint8_t *target, uint8_t *actual)
+printresult(RSA *rsa, uint8_t *target, uint8_t *actual, uint64_t *counter)
 {	
 	uint8_t		*dst;
 	BUF_MEM		*buf;
@@ -628,7 +629,9 @@ printresult(RSA *rsa, uint8_t *target, uint8_t *actual)
 	msg("Found a key for %s (%d) - %s.onion\n",
 	    target, strnlen((char *)target, ONION_LENP1), actual);
 	printf("----------------------------------------------------------------\n");
-	printf("%s.onion\n", actual);
+	printf("Found matching domain after "
+	    "%" PRIu64 " tries: %s.onion\n", counter[0], actual);
+	printf("----------------------------------------------------------------\n");
 	printf("%s\n", dst);
 	fflush(stdout);
 
